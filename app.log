@@ -1,0 +1,14 @@
+2026-02-24 10:53:15,507 - app.services.orchestrator - ERROR - Error processing task
+Traceback (most recent call last):
+  File "/mnt/d/UFT_Company/cut_video_inst/app/services/orchestrator.py", line 82, in process_day_room
+    self.video_service.cut_segment(meta["path"], start_offset, duration, seg_path)
+  File "/mnt/d/UFT_Company/cut_video_inst/app/services/video_service.py", line 70, in cut_segment
+    subprocess.run(cmd, check=True, capture_output=True)
+  File "/usr/lib/python3.12/subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['/mnt/d/UFT_Company/env/lib/python3.12/site-packages/imageio_ffmpeg/binaries/ffmpeg-linux-x86_64-v7.0.2', '-y', '-ss', '0.0', '-t', '420.0', '-i', '/mnt/d/UFT_Company/cut_video_inst/storage/downloads/2026-02-24/room_1/room1_12-00.mp4', '-c', 'copy', '-avoid_negative_ts', '1', '/mnt/d/UFT_Company/cut_video_inst/storage/output/2026-02-24/room_1/temp_1200_1.mp4']' returned non-zero exit status 234.
+2026-03-02 10:46:38,834 - app.services.orchestrator - WARNING - File /mnt/d/UFT_Company/cut_video_inst/storage/downloads/2026-02-18/504-2/504_2_v_bino_0022_0022_20260218133000_20260218135939_1535203_—_копия.mp4 room 504 does not match task room 504-2. Skipping.
+2026-03-02 11:04:30,893 - __main__ - INFO - Serving file for download: /mnt/d/UFT_Company/cut_video_inst/storage/output/2026-02-18/504-2/2026-02-18_504-2_14-10_14-20.mp4 (size: 175558811 bytes)
+2026-03-02 11:07:46,258 - __main__ - INFO - Serving file for download: /mnt/d/UFT_Company/cut_video_inst/storage/output/2026-02-18/504-2/2026-02-18_504-2_14-10_14-20.mp4 (size: 175558811 bytes)
+2026-03-02 11:07:46,468 - __main__ - INFO - Serving file for download: /mnt/d/UFT_Company/cut_video_inst/storage/output/2026-02-18/504-2/2026-02-18_504-2_14-10_14-20.mp4 (size: 175558811 bytes)
+2026-03-02 11:07:49,770 - __main__ - INFO - Serving file for download: /mnt/d/UFT_Company/cut_video_inst/storage/output/2026-02-18/504-2/2026-02-18_504-2_14-10_14-20.mp4 (size: 175558811 bytes)

@@ -1,0 +1,23 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# Video files
+*.mp4
+*.avi
+*.mkv
+*.mov
+
+# Output folders
+output/
+videos/
+recordings/
+
+# Node / cache
+node_modules/
+
+# OS / IDE
+.vscode/
+.idea/
+.DS_Store

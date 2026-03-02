@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+sqlalchemy
+pydantic-settings
+paramiko
+requests
+python-multipart
+imageio-ffmpeg
