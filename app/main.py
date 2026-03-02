@@ -1,5 +1,7 @@
 from fastapi import FastAPI, BackgroundTasks, Depends, HTTPException
 from fastapi.responses import FileResponse
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 import os
 from datetime import datetime
@@ -22,6 +24,17 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="CCTV Video Processing API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.mount("/ui", StaticFiles(directory="ui", html=True), name="ui")
+
 orchestrator = OrchestratorService()
 
 @app.on_event("startup")

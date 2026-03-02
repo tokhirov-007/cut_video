@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CCTV Video Cutter</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="background-animation"></div>
+    
+    <div class="glass-container">
+        <header>
+            <h1><span class="gradient-text">Video</span> Cutter</h1>
+            <p>Smart & Automated CCTV Clipping</p>
+        </header>
+
+        <main>
+            <div class="tabs">
+                <button class="tab-btn active" data-target="create-task">Create Task</button>
+                <button class="tab-btn" data-target="status-check">Check Status</button>
+                <button class="tab-btn" data-target="download-videos">Download</button>
+            </div>
+
+            <section id="create-task" class="tab-content active">
+                <form id="task-form">
+                    <div class="form-group">
+                        <label for="task-date">Date:</label>
+                        <input type="date" id="task-date" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="task-rooms">Rooms (comma-separated):</label>
+                        <input type="text" id="task-rooms" placeholder="e.g. 504, 608" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Intervals:</label>
+                        <div id="intervals-container">
+                            <div class="interval-row">
+                                <input type="time" class="int-start" required> -
+                                <input type="time" class="int-end" required>
+                                <button type="button" class="remove-btn" disabled>&times;</button>
+                            </div>
+                        </div>
+                        <button type="button" class="btn outline" id="add-interval">+ Add Interval</button>
+                    </div>
+
+                    <button type="submit" class="btn primary">Start Processing</button>
+                </form>
+                <div id="create-result" class="result-message"></div>
+            </section>
+
+            <section id="status-check" class="tab-content">
+                <div class="form-group">
+                    <label for="status-date">Date:</label>
+                    <div class="input-group">
+                        <input type="date" id="status-date" required>
+                        <button type="button" class="btn primary" id="check-status-btn">Check</button>
+                    </div>
+                </div>
+                <div id="status-result" class="results-container"></div>
+            </section>
+
+            <section id="download-videos" class="tab-content">
+                <div class="form-group double">
+                    <div>
+                        <label for="download-date">Date:</label>
+                        <input type="date" id="download-date" required>
+                    </div>
+                    <div>
+                        <label for="download-room">Room:</label>
+                        <input type="text" id="download-room" placeholder="e.g. 504" required>
+                    </div>
+                </div>
+                <button type="button" class="btn primary full-width" id="load-videos-btn">Load Videos</button>
+                <div id="downloads-result" class="results-container mt-3"></div>
+            </section>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
