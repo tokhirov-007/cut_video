@@ -13,7 +13,7 @@ class OrchestratorService:
         self.remote_sync = RemoteSyncService()
         self.video_service = VideoService()
 
-    def process_day_room(self, task_id: int):
+    def process_day_room(self, task_id: int, skip_sync: bool = False):
         db = SessionLocal()
         task = db.query(ProcessingTask).get(task_id)
         if not task:
@@ -25,15 +25,34 @@ class OrchestratorService:
             db.commit()
 
             # 1. Sync files
-            local_files = self.remote_sync.sync_room_videos(task.date_str, task.room)
+            local_files = []
+            if not skip_sync:
+                local_files = self.remote_sync.sync_room_videos(task.date_str, task.room)
+            else:
+                room_dir = os.path.join(settings.DOWNLOAD_PATH, task.date_str, task.room)
+                if os.path.exists(room_dir):
+                    local_files = [os.path.join(room_dir, f) for f in os.listdir(room_dir) if f.endswith(('.mp4', '.mkv', '.avi'))]
+
             if not local_files:
                 task.status = TaskStatus.FAILED.value
-                task.logs = task.logs + ["No files found on remote server or sync failed."]
+                task.logs = task.logs + ["No files found to process."]
                 db.commit()
                 return
 
+            # Deduplicate files by size (identical copies have same byte count)
+            seen_sizes = set()
+            unique_files = []
+            for f in sorted(local_files):
+                fsize = os.path.getsize(f)
+                if fsize not in seen_sizes:
+                    seen_sizes.add(fsize)
+                    unique_files.append(f)
+                else:
+                    logger.info(f"Skipping duplicate file (same size): {f}")
+            local_files = unique_files
+
             task.status = TaskStatus.PROCESSING.value
-            task.logs = task.logs + [f"Downloaded {len(local_files)} files. Starting processing."]
+            task.logs = task.logs + [f"Found {len(local_files)} files. Starting processing."]
             db.commit()
 
             # 2. Analyze files (get start time and duration)
@@ -42,22 +61,39 @@ class OrchestratorService:
             
             for f in local_files:
                 info = self.video_service.get_video_info(f)
-                
-                # Check if file belongs to the correct room
-                if info["room"] and info["room"] != task.room:
-                    logger.warning(f"File {f} room {info['room']} does not match task room {task.room}. Skipping.")
+
+                # If start_time could not be extracted from filename or metadata,
+                # assume the video is a full-day CCTV recording starting at 00:00
+                if not info.get("start_time"):
+                    logger.warning(
+                        f"Could not extract start_time for {f}. "
+                        f"Assuming full-day recording starting at 00:00 for {task.date_str}."
+                    )
+                    info["start_time"] = (0, 0, 0)
+
+                # Room match: parsed room from filename may differ slightly (e.g. "110" vs "110 xona")
+                # In that case allow if task.room starts with or is contained in the parsed room, or vice versa
+                parsed_room = (info["room"] or "").strip()
+                task_room = (task.room or "").strip()
+                rooms_match = (
+                    not parsed_room  # no room info means accept all
+                    or parsed_room == task_room
+                    or parsed_room.startswith(task_room)
+                    or task_room.startswith(parsed_room)
+                )
+                if not rooms_match:
+                    logger.warning(f"File {f} room '{parsed_room}' does not match task room '{task_room}'. Skipping.")
                     continue
 
-                if info["start_time"]:
-                    # info["start_time"] is (h, m, s)
-                    start_dt = datetime.combine(date_obj, time(*info["start_time"]))
-                    duration = timedelta(seconds=info["duration"])
-                    video_meta.append({
-                        "path": f,
-                        "start": start_dt,
-                        "end": start_dt + duration,
-                        "duration": info["duration"]
-                    })
+                # info["start_time"] is (h, m, s)
+                start_dt = datetime.combine(date_obj, time(*info["start_time"]))
+                duration = timedelta(seconds=info["duration"])
+                video_meta.append({
+                    "path": f,
+                    "start": start_dt,
+                    "end": start_dt + duration,
+                    "duration": info["duration"]
+                })
             
             # Sort by start time
             video_meta.sort(key=lambda x: x["start"])
@@ -100,6 +136,44 @@ class OrchestratorService:
                             os.remove(s)
                     
                     task.logs = task.logs + [f"Completed interval {interval['start']}-{interval['end']}"]
+
+                    # Automatically upload to AI Controller
+                    import requests
+                    try:
+                        def upload_to_ai():
+                            # 1. Create session
+                            r_sess = requests.post(f"{settings.AI_CONTROLLER_URL}/create-session")
+                            r_sess.raise_for_status()
+                            session_id = r_sess.json()["session_id"]
+                            
+                            # 2. Upload video
+                            with open(final_path, 'rb') as vf:
+                                r_vid = requests.post(
+                                    f"{settings.AI_CONTROLLER_URL}/upload-video/{session_id}",
+                                    files={"video": (final_name, vf, "video/mp4")}
+                                )
+                                r_vid.raise_for_status()
+
+                            # 3. Register pending session with sm-backend
+                            r_reg = requests.post(
+                                f"{settings.SM_BACKEND_URL}/api/analysis/register_session/",
+                                json={
+                                    "session_id": session_id,
+                                    "topic": interval.get('subject', 'Unknown'),
+                                    "teacher": interval.get('teacher', 'Unknown'),
+                                    "video_file": f"/api/download-video/{session_id}"
+                                }
+                            )
+                            r_reg.raise_for_status()
+                            
+                            return session_id
+                            
+                        sid = upload_to_ai()
+                        task.logs = task.logs + [f"Successfully uploaded to AI. Session ID: {sid}"]
+                    except Exception as ai_e:
+                        logger.error(f"Failed to upload to AI: {ai_e}")
+                        task.logs = task.logs + [f"Failed to upload to AI: {ai_e}"]
+
                 else:
                     task.logs = task.logs + [f"Gap: No video for interval {interval['start']}-{interval['end']}"]
                 

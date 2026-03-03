@@ -12,3 +12,75 @@ subprocess.CalledProcessError: Command '['/mnt/d/UFT_Company/env/lib/python3.12/
 2026-03-02 11:07:46,258 - __main__ - INFO - Serving file for download: /mnt/d/UFT_Company/cut_video_inst/storage/output/2026-02-18/504-2/2026-02-18_504-2_14-10_14-20.mp4 (size: 175558811 bytes)
 2026-03-02 11:07:46,468 - __main__ - INFO - Serving file for download: /mnt/d/UFT_Company/cut_video_inst/storage/output/2026-02-18/504-2/2026-02-18_504-2_14-10_14-20.mp4 (size: 175558811 bytes)
 2026-03-02 11:07:49,770 - __main__ - INFO - Serving file for download: /mnt/d/UFT_Company/cut_video_inst/storage/output/2026-02-18/504-2/2026-02-18_504-2_14-10_14-20.mp4 (size: 175558811 bytes)
+2026-03-02 13:55:55,818 - __main__ - ERROR - Failed to fetch and process schedule: 401 Client Error: Unauthorized for url: http://localhost:8001/api/schedules/today/
+2026-03-02 13:55:57,092 - __main__ - ERROR - Failed to fetch and process schedule: 401 Client Error: Unauthorized for url: http://localhost:8001/api/schedules/today/
+2026-03-02 14:07:46,753 - app.services.remote_sync - WARNING - Local source directory videos/2026-03-02/404 not found.
+2026-03-02 14:14:58,612 - app.services.remote_sync - WARNING - Local source directory videos/2026-03-02/404 not found.
+2026-03-03 08:58:52,395 - app.services.orchestrator - ERROR - Failed to upload to AI: HTTPConnectionPool(host='localhost', port=8002): Max retries exceeded with url: /create-session (Caused by NewConnectionError("HTTPConnection(host='localhost', port=8002): Failed to establish a new connection: [Errno 111] Connection refused"))
+2026-03-03 08:58:57,168 - app.services.orchestrator - ERROR - Failed to upload to AI: HTTPConnectionPool(host='localhost', port=8002): Max retries exceeded with url: /create-session (Caused by NewConnectionError("HTTPConnection(host='localhost', port=8002): Failed to establish a new connection: [Errno 111] Connection refused"))
+2026-03-03 09:03:01,465 - app.services.orchestrator - ERROR - Failed to upload to AI: HTTPConnectionPool(host='localhost', port=8002): Max retries exceeded with url: /create-session (Caused by NewConnectionError("HTTPConnection(host='localhost', port=8002): Failed to establish a new connection: [Errno 111] Connection refused"))
+2026-03-03 09:03:06,265 - app.services.orchestrator - ERROR - Failed to upload to AI: HTTPConnectionPool(host='localhost', port=8002): Max retries exceeded with url: /create-session (Caused by NewConnectionError("HTTPConnection(host='localhost', port=8002): Failed to establish a new connection: [Errno 111] Connection refused"))
+2026-03-03 09:10:46,703 - app.services.orchestrator - ERROR - Failed to upload to AI: HTTPConnectionPool(host='localhost', port=8002): Max retries exceeded with url: /create-session (Caused by NewConnectionError("HTTPConnection(host='localhost', port=8002): Failed to establish a new connection: [Errno 111] Connection refused"))
+2026-03-03 09:10:51,535 - app.services.orchestrator - ERROR - Failed to upload to AI: HTTPConnectionPool(host='localhost', port=8002): Max retries exceeded with url: /create-session (Caused by NewConnectionError("HTTPConnection(host='localhost', port=8002): Failed to establish a new connection: [Errno 111] Connection refused"))
+2026-03-03 09:21:19,506 - app.services.orchestrator - ERROR - Failed to upload to AI: HTTPConnectionPool(host='localhost', port=8002): Max retries exceeded with url: /create-session (Caused by NewConnectionError("HTTPConnection(host='localhost', port=8002): Failed to establish a new connection: [Errno 111] Connection refused"))
+2026-03-03 09:21:24,325 - app.services.orchestrator - ERROR - Failed to upload to AI: HTTPConnectionPool(host='localhost', port=8002): Max retries exceeded with url: /create-session (Caused by NewConnectionError("HTTPConnection(host='localhost', port=8002): Failed to establish a new connection: [Errno 111] Connection refused"))
+2026-03-03 09:51:46,439 - app.services.orchestrator - ERROR - Failed to upload to AI: 404 Client Error: Not Found for url: http://localhost:8001/api/analyses/register_session/
+2026-03-03 10:36:46,612 - app.services.orchestrator - WARNING - Could not extract start_time for /home/lordx/sm/cut_video/storage/downloads/2026-02-23/110/110 xona.mp4. It might not be sliced correctly.
+2026-03-03 10:37:21,891 - app.services.orchestrator - WARNING - Could not extract start_time for /home/lordx/sm/cut_video/storage/downloads/2026-02-23/110/110 xona.mp4. It might not be sliced correctly.
+2026-03-03 10:37:31,896 - app.services.orchestrator - WARNING - Could not extract start_time for /home/lordx/sm/cut_video/storage/downloads/2026-02-23/110/110 xona.mp4. It might not be sliced correctly.
+2026-03-03 10:38:58,311 - app.services.orchestrator - WARNING - Could not extract start_time for /home/lordx/sm/cut_video/storage/downloads/2026-02-23/110/110 xona.mp4. It might not be sliced correctly.
+2026-03-03 10:41:22,316 - app.services.orchestrator - WARNING - Could not extract start_time for /home/lordx/sm/cut_video/storage/downloads/2026-02-23/110/110 xona.mp4. It might not be sliced correctly.
+2026-03-03 10:47:14,040 - app.services.orchestrator - WARNING - Could not extract start_time for /home/lordx/sm/cut_video/storage/downloads/2026-02-23/110/110 xona.mp4. Assuming full-day recording starting at 00:00 for 2026-02-23.
+2026-03-03 11:03:11,435 - app.services.orchestrator - WARNING - Could not extract start_time for /home/lordx/sm/cut_video/storage/downloads/2026-02-23/110/110 xona.mp4. Assuming full-day recording starting at 00:00 for 2026-02-23.
+2026-03-03 11:11:18,652 - app.services.orchestrator - WARNING - Could not extract start_time for /home/lordx/sm/cut_video/storage/downloads/2026-02-23/110/110 xona.mp4. Assuming full-day recording starting at 00:00 for 2026-02-23.
+2026-03-03 11:11:46,540 - app.services.orchestrator - WARNING - Could not extract start_time for /home/lordx/sm/cut_video/storage/downloads/2026-02-23/110/110.mp4. Assuming full-day recording starting at 00:00 for 2026-02-23.
+2026-03-03 11:11:46,737 - app.services.orchestrator - WARNING - Could not extract start_time for /home/lordx/sm/cut_video/storage/downloads/2026-02-23/110/110 xona.mp4. Assuming full-day recording starting at 00:00 for 2026-02-23.
+2026-03-03 11:31:54,106 - app.services.osd_extractor - WARNING - opencv-python not installed – OSD extraction skipped
+2026-03-03 11:31:54,205 - app.services.orchestrator - WARNING - Could not extract start_time for /home/lordx/sm/cut_video/storage/downloads/2026-02-23/110/110.mp4. Assuming full-day recording starting at 00:00 for 2026-02-23.
+2026-03-03 11:31:54,306 - app.services.osd_extractor - WARNING - opencv-python not installed – OSD extraction skipped
+2026-03-03 11:31:54,405 - app.services.orchestrator - WARNING - Could not extract start_time for /home/lordx/sm/cut_video/storage/downloads/2026-02-23/110/110 xona.mp4. Assuming full-day recording starting at 00:00 for 2026-02-23.
+2026-03-03 11:43:50,115 - app.services.osd_extractor - INFO - OSD timestamp found in full at offset 0.5s: 2026-02-23 12:00:00 (text: "02-23-2026 Mon 12:00:00 T oe \\\n| . _ ‘i . a\ni a ee : —\n| g &y Pn, 5 a | | Hl\ni -: 2 re OM “ees me pe WN. . vit\nMeo set ey x nS “yy aa 1\n‘ \\ es SE. Re ee OS\n\\ x _ fe ‘ —en? a a] i > '\nway? ae Me _ / w i y “Ss > | I. “a I\n. L . i J s\n\\ 110-2 hona <\n\\ \\ . ; =")
+2026-03-03 11:43:50,116 - app.services.orchestrator - ERROR - Error processing task
+Traceback (most recent call last):
+  File "/home/lordx/sm/cut_video/app/services/video_service.py", line 67, in get_video_info
+    fname_room = re.match(r'^(\d+)', filename)
+                                     ^^^^^^^^
+UnboundLocalError: cannot access local variable 'filename' where it is not associated with a value
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/lordx/sm/cut_video/app/services/orchestrator.py", line 51, in process_day_room
+    info = self.video_service.get_video_info(f)
+  File "/home/lordx/sm/cut_video/app/services/video_service.py", line 76, in get_video_info
+    logger.debug(f"OSD extraction failed for {filename}: {osd_e}")
+                                              ^^^^^^^^
+UnboundLocalError: cannot access local variable 'filename' where it is not associated with a value
+2026-03-03 11:46:10,850 - app.services.osd_extractor - INFO - OSD timestamp found in full at offset 0.5s: 2026-02-23 12:00:00 (text: "02-23-2026 Mon 12:00:00 T oe \\\n| . _ ‘i . a\ni a ee : —\n| g &y Pn, 5 a | | Hl\ni -: 2 re OM “ees me pe WN. . vit\nMeo set ey x nS “yy aa 1\n‘ \\ es SE. Re ee OS\n\\ x _ fe ‘ —en? a a] i > '\nway? ae Me _ / w i y “Ss > | I. “a I\n. L . i J s\n\\ 110-2 hona <\n\\ \\ . ; =")
+2026-03-03 11:46:10,851 - app.services.orchestrator - ERROR - Error processing task
+Traceback (most recent call last):
+  File "/home/lordx/sm/cut_video/app/services/video_service.py", line 67, in get_video_info
+    fname_room = re.match(r'^(\d+)', filename)
+                                     ^^^^^^^^
+UnboundLocalError: cannot access local variable 'filename' where it is not associated with a value
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/lordx/sm/cut_video/app/services/orchestrator.py", line 51, in process_day_room
+    info = self.video_service.get_video_info(f)
+  File "/home/lordx/sm/cut_video/app/services/video_service.py", line 76, in get_video_info
+    logger.debug(f"OSD extraction failed for {filename}: {osd_e}")
+                                              ^^^^^^^^
+UnboundLocalError: cannot access local variable 'filename' where it is not associated with a value
+2026-03-03 11:56:22,652 - app.services.osd_extractor - INFO - OSD timestamp found in full at offset 0.5s: 2026-02-23 12:00:00 (text: "02-23-2026 Mon 12:00:00 T oe \\\n| . _ ‘i . a\ni a ee : —\n| g &y Pn, 5 a | | Hl\ni -: 2 re OM “ees me pe WN. . vit\nMeo set ey x nS “yy aa 1\n‘ \\ es SE. Re ee OS\n\\ x _ fe ‘ —en? a a] i > '\nway? ae Me _ / w i y “Ss > | I. “a I\n. L . i J s\n\\ 110-2 hona <\n\\ \\ . ; =")
+2026-03-03 11:56:22,652 - app.services.video_service - INFO - OCR OSD start_time=12:00:00 for 110.mp4
+2026-03-03 11:56:25,379 - app.services.osd_extractor - INFO - OSD timestamp found in full at offset 0.5s: 2026-02-23 12:00:00 (text: "02-23-2026 Mon 12:00:00 T oe \\\n| . _ ‘i . a\ni a ee : —\n| g &y Pn, 5 a | | Hl\ni -: 2 re OM “ees me pe WN. . vit\nMeo set ey x nS “yy aa 1\n‘ \\ es SE. Re ee OS\n\\ x _ fe ‘ —en? a a] i > '\nway? ae Me _ / w i y “Ss > | I. “a I\n. L . i J s\n\\ 110-2 hona <\n\\ \\ . ; =")
+2026-03-03 11:56:25,380 - app.services.video_service - INFO - OCR OSD start_time=12:00:00 for 110 xona.mp4
+2026-03-03 12:02:13,922 - app.services.osd_extractor - INFO - OSD timestamp found in full at offset 0.5s: 2026-02-23 12:00:00 (text: "02-23-2026 Mon 12:00:00 T oe \\\n| . _ ‘i . a\ni a ee : —\n| g &y Pn, 5 a | | Hl\ni -: 2 re OM “ees me pe WN. . vit\nMeo set ey x nS “yy aa 1\n‘ \\ es SE. Re ee OS\n\\ x _ fe ‘ —en? a a] i > '\nway? ae Me _ / w i y “Ss > | I. “a I\n. L . i J s\n\\ 110-2 hona <\n\\ \\ . ; =")
+2026-03-03 12:02:13,923 - app.services.video_service - INFO - OCR OSD start_time=12:00:00 for 110.mp4
+2026-03-03 12:02:16,637 - app.services.osd_extractor - INFO - OSD timestamp found in full at offset 0.5s: 2026-02-23 12:00:00 (text: "02-23-2026 Mon 12:00:00 T oe \\\n| . _ ‘i . a\ni a ee : —\n| g &y Pn, 5 a | | Hl\ni -: 2 re OM “ees me pe WN. . vit\nMeo set ey x nS “yy aa 1\n‘ \\ es SE. Re ee OS\n\\ x _ fe ‘ —en? a a] i > '\nway? ae Me _ / w i y “Ss > | I. “a I\n. L . i J s\n\\ 110-2 hona <\n\\ \\ . ; =")
+2026-03-03 12:02:16,639 - app.services.video_service - INFO - OCR OSD start_time=12:00:00 for 110 xona.mp4
+2026-03-03 12:08:45,165 - app.services.orchestrator - INFO - Skipping duplicate file (same size): /home/lordx/sm/cut_video/storage/downloads/2026-02-23/110/110.mp4
+2026-03-03 12:08:48,203 - app.services.osd_extractor - INFO - OSD timestamp found in full at offset 0.5s: 2026-02-23 12:00:00 (text: "02-23-2026 Mon 12:00:00 T oe \\\n| . _ ‘i . a\ni a ee : —\n| g &y Pn, 5 a | | Hl\ni -: 2 re OM “ees me pe WN. . vit\nMeo set ey x nS “yy aa 1\n‘ \\ es SE. Re ee OS\n\\ x _ fe ‘ —en? a a] i > '\nway? ae Me _ / w i y “Ss > | I. “a I\n. L . i J s\n\\ 110-2 hona <\n\\ \\ . ; =")
+2026-03-03 12:08:48,204 - app.services.video_service - INFO - OCR OSD start_time=12:00:00 for 110 xona.mp4

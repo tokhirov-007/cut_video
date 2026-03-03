@@ -12,88 +12,107 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Dynamic Interval Rows
-    const addIntervalBtn = document.getElementById('add-interval');
-    const intervalsContainer = document.getElementById('intervals-container');
 
-    function updateRemoveButtons() {
-        const rows = intervalsContainer.querySelectorAll('.interval-row');
-        rows.forEach(row => {
-            const btn = row.querySelector('.remove-btn');
-            btn.disabled = rows.length === 1;
+
+    // Upload Submission
+    const uploadForm = document.getElementById('upload-form');
+    if (uploadForm) {
+        uploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('upload-btn');
+            const progress = document.getElementById('upload-progress');
+            const resultDiv = document.getElementById('create-result');
+
+            btn.disabled = true;
+            progress.style.display = 'block';
+            resultDiv.style.display = 'none';
+
+            const fileInput = document.getElementById('upload-video');
+            const file = fileInput.files[0];
+
+            // Extract the actual date the video was created/modified from file metadata
+            const fileDate = new Date(file.lastModified);
+            const year = fileDate.getFullYear();
+            const month = String(fileDate.getMonth() + 1).padStart(2, '0');
+            const day = String(fileDate.getDate()).padStart(2, '0');
+            const isoDate = `${year}-${month}-${day}`;
+
+            const formData = new FormData();
+            formData.append('date', isoDate);
+            formData.append('video', file);
+
+            const pollStatus = async (taskId) => {
+                const interval = setInterval(async () => {
+                    try {
+                        const statusRes = await fetch(`${BASE_URL}/tasks/${taskId}`);
+                        const statusData = await statusRes.json();
+                        document.getElementById('progress-text').innerText = `Video kesilmoqda... Holati: ${statusData.status}`;
+                        const currentStatus = statusData.status ? statusData.status.toUpperCase() : '';
+                        if (currentStatus === 'COMPLETED') {
+                            clearInterval(interval);
+                            progress.style.display = 'none';
+                            resultDiv.className = 'result-message success';
+                            resultDiv.innerHTML = `Avtomatik kesish va AI ga yuborish muvaffaqiyatli yakunlandi!<br><br><b>Jarayonlar:</b><ul style="text-align:left; margin-top:10px;">${(statusData.logs || []).map(l => `<li style="font-size: 0.85rem">${l}</li>`).join('')}</ul>`;
+                            resultDiv.style.display = 'block';
+                            btn.disabled = false;
+                        } else if (currentStatus === 'FAILED') {
+                            clearInterval(interval);
+                            progress.style.display = 'none';
+                            resultDiv.className = 'result-message error';
+                            resultDiv.innerText = `Xatolik yuz berdi. Qayta urinib ko'ring.`;
+                            resultDiv.style.display = 'block';
+                            btn.disabled = false;
+                        }
+                    } catch (e) {
+                        console.error('Polling xatosi', e);
+                    }
+                }, 3000);
+            };
+
+            try {
+                const res = await fetch(`${BASE_URL}/upload-and-process`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+
+                if (res.ok && data.task_id) {
+                    pollStatus(data.task_id);
+                    uploadForm.reset();
+                } else if (res.ok) {
+                    // No intervals found
+                    progress.style.display = 'none';
+                    resultDiv.className = 'result-message error';
+                    resultDiv.innerText = data.message;
+                    resultDiv.style.display = 'block';
+                    btn.disabled = false;
+                } else {
+                    progress.style.display = 'none';
+                    resultDiv.className = 'result-message error';
+                    resultDiv.innerText = `Xatolik: ${data.detail || JSON.stringify(data)}`;
+                    resultDiv.style.display = 'block';
+                    btn.disabled = false;
+                }
+            } catch (err) {
+                progress.style.display = 'none';
+                resultDiv.className = 'result-message error';
+                resultDiv.innerText = 'Server bilan aloqa uzildi.';
+                resultDiv.style.display = 'block';
+                btn.disabled = false;
+            }
         });
     }
 
-    addIntervalBtn.addEventListener('click', () => {
-        const row = document.createElement('div');
-        row.className = 'interval-row';
-        row.innerHTML = `
-            <input type="time" class="int-start" required> -
-            <input type="time" class="int-end" required>
-            <button type="button" class="remove-btn">&times;</button>
-        `;
-        intervalsContainer.appendChild(row);
-
-        row.querySelector('.remove-btn').addEventListener('click', () => {
-            row.remove();
-            updateRemoveButtons();
-        });
-        updateRemoveButtons();
-    });
-
-    intervalsContainer.querySelector('.remove-btn').addEventListener('click', function () {
-        if (intervalsContainer.querySelectorAll('.interval-row').length > 1) {
-            this.closest('.interval-row').remove();
-            updateRemoveButtons();
-        }
-    });
-
-    // Form submission
-    const taskForm = document.getElementById('task-form');
-    taskForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        const date = document.getElementById('task-date').value;
-        const rooms = document.getElementById('task-rooms').value.split(',').map(r => r.trim()).filter(r => r);
-        const intervalRows = intervalsContainer.querySelectorAll('.interval-row');
-
-        const intervals = Array.from(intervalRows).map(row => ({
-            start: row.querySelector('.int-start').value,
-            end: row.querySelector('.int-end').value
-        }));
-
-        const payload = { date, rooms, intervals };
-        const resultDiv = document.getElementById('create-result');
-
-        try {
-            const res = await fetch(`${BASE_URL}/process-day`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            const data = await res.json();
-
-            if (res.ok) {
-                resultDiv.className = 'result-message success';
-                resultDiv.innerText = `Success! Tasks started. IDs: ${data.task_ids.join(', ')}`;
-                setTimeout(() => { resultDiv.style.display = 'none'; resultDiv.className = 'result-message'; }, 5000);
-            } else {
-                resultDiv.className = 'result-message error';
-                resultDiv.innerText = `Error: ${JSON.stringify(data)}`;
-            }
-        } catch (err) {
-            resultDiv.className = 'result-message error';
-            resultDiv.innerText = 'Network error fetching data.';
-        }
-    });
-
     // Status Check logic
     document.getElementById('check-status-btn').addEventListener('click', async () => {
-        const date = document.getElementById('status-date').value;
+        const dateStr = document.getElementById('status-date').value;
+        const parts = dateStr.split('/');
+        const date = parts.length === 3 ? `${parts[2]}-${parts[1]}-${parts[0]}` : dateStr;
+
         const container = document.getElementById('status-result');
         container.innerHTML = 'Loading...';
 
-        if (!date) {
+        if (!dateStr) {
             container.innerHTML = '<span style="color:red">Please select a date</span>';
             return;
         }
@@ -123,12 +142,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Download Videos logic
     document.getElementById('load-videos-btn').addEventListener('click', async () => {
-        const date = document.getElementById('download-date').value;
+        const dateStr = document.getElementById('download-date').value;
+        const parts = dateStr.split('/');
+        const date = parts.length === 3 ? `${parts[2]}-${parts[1]}-${parts[0]}` : dateStr;
+
         const room = document.getElementById('download-room').value.trim();
         const container = document.getElementById('downloads-result');
         container.innerHTML = 'Loading...';
 
-        if (!date || !room) {
+        if (!dateStr || !room) {
             container.innerHTML = '<span style="color:red">Please fill both fields</span>';
             return;
         }

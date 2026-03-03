@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,9 +8,10 @@
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
 </head>
+
 <body>
     <div class="background-animation"></div>
-    
+
     <div class="glass-container">
         <header>
             <h1><span class="gradient-text">Video</span> Cutter</h1>
@@ -24,39 +26,42 @@
             </div>
 
             <section id="create-task" class="tab-content active">
-                <form id="task-form">
-                    <div class="form-group">
-                        <label for="task-date">Date:</label>
-                        <input type="date" id="task-date" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="task-rooms">Rooms (comma-separated):</label>
-                        <input type="text" id="task-rooms" placeholder="e.g. 504, 608" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Intervals:</label>
-                        <div id="intervals-container">
-                            <div class="interval-row">
-                                <input type="time" class="int-start" required> -
-                                <input type="time" class="int-end" required>
-                                <button type="button" class="remove-btn" disabled>&times;</button>
-                            </div>
+                <form id="upload-form">
+                    <div class="form-group double">
+                        <div style="grid-column: span 2;">
+                            <label for="upload-video">Kamera videosini yuklang (Barcha dars jadvallari avtomatik
+                                qidiriladi):</label>
+                            <input type="file" id="upload-video" accept="video/mp4,video/x-matroska,video/avi" required>
                         </div>
-                        <button type="button" class="btn outline" id="add-interval">+ Add Interval</button>
                     </div>
 
-                    <button type="submit" class="btn primary">Start Processing</button>
+                    <p style="margin-bottom: 1.5rem; color: var(--text-muted); font-size: 0.9rem;">
+                        The system will automatically extract segments from this video based on the schedule for the
+                        selected room and date.
+                    </p>
+
+                    <button type="submit" class="btn primary" id="upload-btn">Yuklash va Avtomatik Kesish</button>
+                    <div id="upload-progress" class="loader-container"
+                        style="display: none; margin-top: 1rem; color: #3b82f6; font-weight: 600; text-align: center;">
+                        <svg class="animate-spin" style="width: 24px; height: 24px; margin: 0 auto 10px auto;"
+                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                            </circle>
+                            <path class="opacity-75" fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                            </path>
+                        </svg>
+                        <span id="progress-text">Video yuklanmoqda... (Sahifani yopmang)</span>
+                    </div>
                 </form>
-                <div id="create-result" class="result-message"></div>
+                <div id="create-result" class="result-message mt-3"></div>
             </section>
 
             <section id="status-check" class="tab-content">
                 <div class="form-group">
-                    <label for="status-date">Date:</label>
+                    <label for="status-date">Sana (dd/mm/yyyy):</label>
                     <div class="input-group">
-                        <input type="date" id="status-date" required>
+                        <input type="text" id="status-date" placeholder="24/02/2026" required>
                         <button type="button" class="btn primary" id="check-status-btn">Check</button>
                     </div>
                 </div>
@@ -66,8 +71,8 @@
             <section id="download-videos" class="tab-content">
                 <div class="form-group double">
                     <div>
-                        <label for="download-date">Date:</label>
-                        <input type="date" id="download-date" required>
+                        <label for="download-date">Sana (dd/mm/yyyy):</label>
+                        <input type="text" id="download-date" placeholder="24/02/2026" required>
                     </div>
                     <div>
                         <label for="download-room">Room:</label>
@@ -80,6 +85,7 @@
         </main>
     </div>
 
-    <script src="app.js"></script>
+    <script src="app.js?v=2"></script>
 </body>
+
 </html>
