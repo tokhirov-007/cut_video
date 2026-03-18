@@ -42,7 +42,7 @@ def startup_event():
     init_db()
 
 from fastapi import File, UploadFile, Form
-import shutil
+import shutil, uuid
 
 @app.post("/upload-and-process")
 async def upload_and_process(
@@ -51,97 +51,41 @@ async def upload_and_process(
     date: str = Form(None),
     db: Session = Depends(get_db)
 ):
-    import requests
-    import re
-    from datetime import datetime
+    """
+    Saves the uploaded video and queues it for processing.
+    OSD reading + schedule matching + cutting all happen inside the orchestrator.
+    """
     try:
-        # Extract from camera filename dynamically before fetching schedules
-        filename = video.filename
-        target_date = None
-        room_candidate = None
-        
-        # New format: 504-2_v_bino_0022_0022_20260218135939_20260218150109_1589189.mp4
-        new_pattern = r'^([^-/_]+).*?(\d{14})_(\d{14})'
-        match_new = re.search(new_pattern, filename)
-        if match_new:
-            room_candidate = match_new.group(1)
-            try:
-                file_dt = datetime.strptime(match_new.group(2), "%Y%m%d%H%M%S")
-                target_date = file_dt.strftime("%Y-%m-%d")
-            except ValueError:
-                pass
-        else:
-            # Old format fallback: room1_12-00.mp4 (no date)
-            old_pattern = r'^([^-/_]+)_(\d{2})-(\d{2})'
-            match_old = re.search(old_pattern, filename)
-            if match_old:
-                room_candidate = match_old.group(1)
+        # Save uploaded file to a neutral temp folder (named by UUID to avoid conflicts)
+        upload_id = str(uuid.uuid4())
+        upload_dir = os.path.join(settings.DOWNLOAD_PATH, "uploads", upload_id)
+        os.makedirs(upload_dir, exist_ok=True)
+        file_path = os.path.join(upload_dir, video.filename)
 
-        # 1. Fetch ALL schedules
-        res = requests.get(f"{settings.SM_BACKEND_URL}/api/schedules/")
-        res.raise_for_status()
-        schedules = res.json()
-        
-        if not schedules:
-            return {"message": "Umuman dars jadvallari topilmadi. Video kesish to'xtatildi."}
-
-        available_dates = sorted(list(set([str(s.get('date')) for s in schedules])), reverse=True)
-        
-        if not target_date:
-            # Fallback chaining if filename has no date:
-            fallback_date = date if date else str(datetime.today().date())
-            target_date = fallback_date if fallback_date in available_dates else available_dates[0]
-
-        intervals = []
-        for s in schedules:
-            if str(s.get('date')) == target_date:
-                # If room wasn't determined by filename, grab the first room from the matching date
-                if not room_candidate:
-                    room_candidate = str(s.get('room'))
-                
-                # Only append intervals that match the room we are analyzing
-                if str(s.get('room')) == room_candidate:
-                    intervals.append({
-                        "start": s['start_time'][:5],
-                        "end": s['end_time'][:5],
-                        "teacher": s['teacher'],
-                        "subject": s['subject']
-                    })
-        
-        if not intervals:
-            return {"message": f"{target_date} sanasi uchun dars jadvallari topilmadi. Video kesish to'xtatildi."}
-            
-        room = room_candidate
-
-        # 2. Save uploaded file to that room's directory
-        room_dir = os.path.join(settings.DOWNLOAD_PATH, target_date, room)
-        os.makedirs(room_dir, exist_ok=True)
-        file_path = os.path.join(room_dir, video.filename)
-        
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(video.file, buffer)
-        
-        # Sort intervals and find the earliest start time to assume video started recording then
-        intervals.sort(key=lambda x: x["start"])
-        start_time = intervals[0]["start"]
-        
-        # 3. Create task and queue it
+
+        # Create a bare task — orchestrator will fill date/room/intervals after reading OSD
         task = ProcessingTask(
-            date_str=target_date,
-            room=room,
-            intervals=intervals,
-            status=TaskStatus.PENDING.value
+            date_str=date or "",
+            room="",
+            intervals=[],
+            status=TaskStatus.PENDING.value,
         )
         db.add(task)
         db.commit()
         db.refresh(task)
 
-        # Pass skip_sync=True to use the local file we just uploaded
-        background_tasks.add_task(orchestrator.process_day_room, task.id, skip_sync=True)
-        
+        # Queue background processing
+        background_tasks.add_task(
+            orchestrator.process_uploaded_file,
+            task.id,
+            file_path,
+        )
+
         return {
-            "message": f"Muvaffaqiyatli yuklandi: {video.filename}. {len(intervals)} ta dars jadvali bo'yicha fon rejimida video kesilishi va analizga yuborilishi boshlandi.",
-            "task_id": task.id
+            "message": f"'{video.filename}' muvaffaqiyatli yuklandi. OSD analizlanmoqda va dars jadvali qidirilmoqda...",
+            "task_id": task.id,
         }
     except Exception as e:
         logger.error(f"Failed to process uploaded video: {e}")
@@ -237,7 +181,7 @@ async def process_day(
 
 @app.get("/tasks/{task_id}")
 async def get_task(task_id: int, db: Session = Depends(get_db)):
-    task = db.query(ProcessingTask).get(task_id)
+    task = db.get(ProcessingTask, task_id)
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
     return {

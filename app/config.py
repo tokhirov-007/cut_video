@@ -22,8 +22,9 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite:///./videos.db"
 
     # Backend Configurations
-    SM_BACKEND_URL: str = "http://192.168.0.149:8001"
-    AI_CONTROLLER_URL: str = "http://192.168.0.149:8002"
+    SM_BACKEND_URL: str = "http://localhost:8001"
+    AI_CONTROLLER_URL: str = "http://localhost:8002"
+    CUT_VIDEO_URL: str = "http://localhost:8000"
 
     class Config:
         env_file = ".env"
