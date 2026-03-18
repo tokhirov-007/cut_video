@@ -11,6 +11,8 @@ from .models import ProcessingTask, TaskStatus, init_db
 from .services.orchestrator import OrchestratorService
 from .config import settings
 
+import logging
+
 # Configure logging
 LOG_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "app.log")
 
