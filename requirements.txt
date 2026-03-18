@@ -6,3 +6,4 @@ paramiko
 requests
 python-multipart
 imageio-ffmpeg
+opencv-python-headless

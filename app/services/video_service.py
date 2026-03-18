@@ -51,12 +51,6 @@ class VideoService:
                 duration = h * 3600 + m * 60 + s
 
         filename = os.path.basename(file_path)
-        room = None
-        is_osd_accurate_val = False
-
-        # ─────────────────────────────────────────────────────────────
-        # PRIMARY METHOD: OCR – read date/time from camera OSD overlay
-        # ─────────────────────────────────────────────────────────────
         try:
             from .osd_extractor import extract_osd_info
             osd_dt, osd_room = extract_osd_info(

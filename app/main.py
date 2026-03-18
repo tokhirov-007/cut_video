@@ -11,13 +11,14 @@ from .models import ProcessingTask, TaskStatus, init_db
 from .services.orchestrator import OrchestratorService
 from .config import settings
 
-import logging
+# Configure logging
+LOG_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "app.log")
 
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler("app.log"),
+        logging.FileHandler(LOG_FILE),
         logging.StreamHandler()
     ]
 )
