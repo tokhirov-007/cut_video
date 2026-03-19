@@ -10,3 +10,5 @@ opencv-python-headless
 pytesseract
 Pillow
 numpy
+python-dotenv
+httpx

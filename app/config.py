@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     # Backend Configurations
     SM_BACKEND_URL: str = "http://localhost:8001"
     AI_CONTROLLER_URL: str = "http://localhost:8002"
-    CUT_VIDEO_URL: str = "http://localhost:8000"
+    CUT_VIDEO_URL: str = "http://localhost:8001"
 
     class Config:
         env_file = ".env"
