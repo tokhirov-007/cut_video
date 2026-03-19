@@ -166,6 +166,8 @@ class OrchestratorService:
             # ── Step 4: Find matching intervals ───────────────────────────
             # Build candidate rooms list
             candidate_rooms = []
+            if task.room:
+                candidate_rooms.append(task.room)
             if osd_room:
                 candidate_rooms.append(osd_room)
             # Also collect all unique rooms from schedules
@@ -176,39 +178,63 @@ class OrchestratorService:
             found_room = None
             found_intervals = []
 
-            osd_time = None
+            video_start_time = None
             if start_time_tuple:
-                h_osd, m_osd, s_osd = start_time_tuple
-                osd_time = time(h_osd, m_osd, s_osd)
+                h_v, m_v, s_v = start_time_tuple
+                video_start_time = time(h_v, m_v, s_v)
 
-            # First pass: look for exact time overlap with OSD time
-            # Second pass (fallback): accept any schedule for this date+room
-            for strict_time_check in [True, False]:
+            # First pass: strict overlap check
+            # Second pass: fallback to any schedule for this date (least precise)
+            for strict_mode in [True, False]:
                 for cdate in candidate_dates:
+                    # If user specified a date, don't look at other dates in strict mode
+                    if strict_mode and task.date_str and cdate != task.date_str:
+                        continue
+                        
                     for croom in candidate_rooms:
+                        # If user specified a room, don't look at other rooms in strict mode
+                        if strict_mode and task.room and not rooms_similar(croom, task.room):
+                            continue
+                            
                         intervals = find_intervals_for(schedules, cdate, croom)
-                        if intervals:
-                            # Filter out placeholder full-day intervals (00:00-23:59)
-                            real_intervals = [
-                                iv for iv in intervals
-                                if not (iv["start"] == "00:00" and iv["end"] == "23:59")
-                            ]
-                            if not real_intervals:
-                                continue
-                            # In strict mode: require that OSD time falls in at least one interval
-                            # Allow 15-minute buffer before start (camera may show 12:59 for a 13:00 lesson)
-                            if strict_time_check and osd_time:
-                                time_matched = any(
-                                    (datetime.strptime(iv["start"], "%H:%M") - timedelta(minutes=15)).time() <= osd_time
-                                    <= datetime.strptime(iv["end"], "%H:%M").time()
-                                    for iv in real_intervals
-                                )
-                                if not time_matched:
-                                    continue
+                        if not intervals:
+                            continue
+                            
+                        # Filter out placeholder full-day intervals
+                        real_intervals = [
+                            iv for iv in intervals
+                            if not (iv["start"] == "00:00" and iv["end"] == "23:59")
+                        ]
+                        if not real_intervals:
+                            continue
+
+                        if strict_mode and video_start_time:
+                            # Accurate overlap check
+                            date_obj_c = datetime.strptime(cdate, "%Y-%m-%d")
+                            v_start_dt = datetime.combine(date_obj_c, video_start_time)
+                            v_end_dt = v_start_dt + timedelta(seconds=duration)
+                            
+                            matching_intervals = []
+                            for iv in real_intervals:
+                                iv_start_dt = datetime.combine(date_obj_c, datetime.strptime(iv["start"], "%H:%M").time())
+                                iv_end_dt = datetime.combine(date_obj_c, datetime.strptime(iv["end"], "%H:%M").time())
+                                
+                                # Check for overlap
+                                if max(v_start_dt, iv_start_dt) < min(v_end_dt, iv_end_dt):
+                                    matching_intervals.append(iv)
+                            
+                            if matching_intervals:
+                                found_date = cdate
+                                found_room = croom
+                                found_intervals = matching_intervals
+                                break
+                        elif not strict_mode:
+                            # Loose fallback: just pick the first room that has a schedule on this candidate date
                             found_date = cdate
                             found_room = croom
                             found_intervals = real_intervals
                             break
+                            
                     if found_intervals:
                         break
                 if found_intervals:

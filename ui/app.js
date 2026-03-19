@@ -45,19 +45,29 @@ document.addEventListener('DOMContentLoaded', () => {
                         const statusRes = await fetch(`${BASE_URL}/tasks/${taskId}`);
                         const statusData = await statusRes.json();
                         const currentStatus = statusData.status ? statusData.status.toUpperCase() : '';
-                        document.getElementById('progress-text').innerHTML = `Video kesilmoqda... Holati: <b>${currentStatus || 'Kutilmoqda...'}</b><br><ul style="text-align:left; font-size: 0.85rem; margin-top:10px; padding-left:20px; color:var(--text-muted); max-height:200px; overflow-y:auto; border-top:1px solid #333; padding-top:10px;">${(statusData.logs || []).map(l => `<li>${l}</li>`).join('')}</ul>`;
+                        const logHtml = (statusData.logs || []).map(l => `<li style="font-size: 0.85rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding: 4px 0;">${l}</li>`).join('');
+                        
+                        document.getElementById('progress-text').innerHTML = `
+                            Video kesilmoqda... Holati: <b>${currentStatus || 'Kutilmoqda...'}</b>
+                            <div style="text-align:left; margin-top:10px; padding:10px; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+                                <ul style="list-style: none; padding: 0; margin: 0; max-height: 150px; overflow-y: auto; color: #cbd5e1;">
+                                    ${logHtml || '<li>Loglar kutilmoqda...</li>'}
+                                </ul>
+                            </div>
+                        `;
+                        
                         if (currentStatus === 'COMPLETED') {
                             clearInterval(interval);
                             progress.style.display = 'none';
                             resultDiv.className = 'result-message success';
-                            resultDiv.innerHTML = `Avtomatik kesish va AI ga yuborish muvaffaqiyatli yakunlandi!<br><br><b>Jarayonlar:</b><ul style="text-align:left; margin-top:10px; max-height:200px; overflow-y:auto;">${(statusData.logs || []).map(l => `<li style="font-size: 0.85rem">${l}</li>`).join('')}</ul>`;
+                            resultDiv.innerHTML = `Avtomatik kesish muvaffaqiyatli yakunlandi!<br><br><b>Jarayonlar:</b><ul style="text-align:left; margin-top:10px; max-height:200px; overflow-y:auto; list-style:none;">${logHtml}</ul>`;
                             resultDiv.style.display = 'block';
                             btn.disabled = false;
                         } else if (currentStatus === 'FAILED') {
                             clearInterval(interval);
                             progress.style.display = 'none';
                             resultDiv.className = 'result-message error';
-                            resultDiv.innerHTML = `Xatolik yuz berdi.<br><br><b>Jarayonlar:</b><ul style="text-align:left; margin-top:10px; max-height:200px; overflow-y:auto;">${(statusData.logs || []).map(l => `<li style="font-size: 0.85rem">${l}</li>`).join('')}</ul>`;
+                            resultDiv.innerHTML = `Xatolik yuz berdi.<br><br><b>Jarayonlar:</b><ul style="text-align:left; margin-top:10px; max-height:200px; overflow-y:auto; list-style:none;">${logHtml}</ul>`;
                             resultDiv.style.display = 'block';
                             btn.disabled = false;
                         }
