@@ -1,25 +1,47 @@
-# Python
+# Python / Virtual Environments
 venv/
+.venv/
+env/
+.env/
+.myvenv/
 __pycache__/
 *.pyc
+*.py[cod]
+*$py.class
 
-# Video files
+# Logs
+*.log
+app.log
+uvi.log
+
+# Database
+*.sqlite
+*.sqlite3
+*.db
+videos.db
+
+# Output / Storage folders
+storage/
+downloads/
+output/
+videos/
+recordings/
+uploads/
+
+# Video files (optional if they appear outside storage)
 *.mp4
 *.avi
 *.mkv
 *.mov
+*.mp3
 
-# Output folders
-output/
-videos/
-recordings/
+# Testing / Diagnostics
+curl_out.json
+test.mp4
 
-# Node / cache
+# OS / IDE / Node
 node_modules/
-
-# OS / IDE
 .vscode/
 .idea/
 .DS_Store
-
 .env
