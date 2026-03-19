@@ -59,7 +59,10 @@ document.addEventListener('DOMContentLoaded', () => {
                             clearInterval(interval);
                             progress.style.display = 'none';
                             resultDiv.className = 'result-message error';
-                            resultDiv.innerText = `Xatolik yuz berdi. Qayta urinib ko'ring.`;
+                            const errorMsg = statusData.logs && statusData.logs.length > 0 
+                                ? statusData.logs[statusData.logs.length - 1] 
+                                : "Noma'lum xatolik yuz berdi.";
+                            resultDiv.innerText = `Xatolik yuz berdi. Sababi: ${errorMsg}`;
                             resultDiv.style.display = 'block';
                             btn.disabled = false;
                         }
