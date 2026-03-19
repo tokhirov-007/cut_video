@@ -52,6 +52,8 @@ async def upload_and_process(
     background_tasks: BackgroundTasks,
     video: UploadFile = File(...),
     date: str = Form(None),
+    room: str = Form(None),
+    last_modified: float = Form(None),
     db: Session = Depends(get_db)
 ):
     """
@@ -68,10 +70,15 @@ async def upload_and_process(
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(video.file, buffer)
 
+        # Restore original mtime so metadata fallback overlap logic acts on real recording time
+        if last_modified:
+            mtime_sec = last_modified / 1000.0
+            os.utime(file_path, (mtime_sec, mtime_sec))
+
         # Create a bare task — orchestrator will fill date/room/intervals after reading OSD
         task = ProcessingTask(
             date_str=date or "",
-            room="",
+            room=room or "",
             intervals=[],
             status=TaskStatus.PENDING.value,
         )

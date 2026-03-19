@@ -29,15 +29,23 @@
                 <form id="upload-form">
                     <div class="form-group double">
                         <div style="grid-column: span 2;">
-                            <label for="upload-video">Kamera videosini yuklang (Barcha dars jadvallari avtomatik
-                                qidiriladi):</label>
+                            <label for="upload-video">Kamera videosini yuklang (Dars jadvali avtomatik qidiriladi):</label>
                             <input type="file" id="upload-video" accept="video/mp4,video/x-matroska,video/avi" required>
                         </div>
                     </div>
+                    <div class="form-group double" style="margin-top: 1rem;">
+                        <div>
+                            <label for="upload-exact-date">Asl Sana (ixtiyoriy):</label>
+                            <input type="date" id="upload-exact-date" title="Agar video nomi yoki OSD da sana bo'lmasa, o'zingiz kiriting">
+                        </div>
+                        <div>
+                            <label for="upload-exact-room">Xona (ixtiyoriy):</label>
+                            <input type="text" id="upload-exact-room" placeholder="Masalan: 8-maruza zali">
+                        </div>
+                    </div>
 
-                    <p style="margin-bottom: 1.5rem; color: var(--text-muted); font-size: 0.9rem;">
-                        The system will automatically extract segments from this video based on the schedule for the
-                        selected room and date.
+                    <p style="margin-bottom: 1.5rem; color: var(--text-muted); font-size: 0.9rem; margin-top:0.5rem;">
+                        Tizim ushbu videoni jadval asosida avtomatik kesadi. Sana/Xonani kiritmasangiz videodan izlanadi.
                     </p>
 
                     <button type="submit" class="btn primary" id="upload-btn">Yuklash va Avtomatik Kesish</button>
@@ -85,7 +93,7 @@
         </main>
     </div>
 
-    <script src="app.js?v=2"></script>
+    <script src="app.js?v=3"></script>
 </body>
 
 </html>

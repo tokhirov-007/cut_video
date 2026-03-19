@@ -30,15 +30,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const fileInput = document.getElementById('upload-video');
             const file = fileInput.files[0];
 
-            // Extract the actual date the video was created/modified from file metadata
-            const fileDate = new Date(file.lastModified);
-            const year = fileDate.getFullYear();
-            const month = String(fileDate.getMonth() + 1).padStart(2, '0');
-            const day = String(fileDate.getDate()).padStart(2, '0');
-            const isoDate = `${year}-${month}-${day}`;
+            const exactDate = document.getElementById('upload-exact-date').value;
+            const exactRoom = document.getElementById('upload-exact-room').value.trim();
 
             const formData = new FormData();
-            formData.append('date', isoDate);
+            if (exactDate) formData.append('date', exactDate);
+            if (exactRoom) formData.append('room', exactRoom);
+            formData.append('last_modified', file.lastModified);
             formData.append('video', file);
 
             const pollStatus = async (taskId) => {
@@ -46,23 +44,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     try {
                         const statusRes = await fetch(`${BASE_URL}/tasks/${taskId}`);
                         const statusData = await statusRes.json();
-                        document.getElementById('progress-text').innerText = `Video kesilmoqda... Holati: ${statusData.status}`;
                         const currentStatus = statusData.status ? statusData.status.toUpperCase() : '';
+                        document.getElementById('progress-text').innerHTML = `Video kesilmoqda... Holati: <b>${currentStatus || 'Kutilmoqda...'}</b><br><ul style="text-align:left; font-size: 0.85rem; margin-top:10px; padding-left:20px; color:var(--text-muted); max-height:200px; overflow-y:auto; border-top:1px solid #333; padding-top:10px;">${(statusData.logs || []).map(l => `<li>${l}</li>`).join('')}</ul>`;
                         if (currentStatus === 'COMPLETED') {
                             clearInterval(interval);
                             progress.style.display = 'none';
                             resultDiv.className = 'result-message success';
-                            resultDiv.innerHTML = `Avtomatik kesish va AI ga yuborish muvaffaqiyatli yakunlandi!<br><br><b>Jarayonlar:</b><ul style="text-align:left; margin-top:10px;">${(statusData.logs || []).map(l => `<li style="font-size: 0.85rem">${l}</li>`).join('')}</ul>`;
+                            resultDiv.innerHTML = `Avtomatik kesish va AI ga yuborish muvaffaqiyatli yakunlandi!<br><br><b>Jarayonlar:</b><ul style="text-align:left; margin-top:10px; max-height:200px; overflow-y:auto;">${(statusData.logs || []).map(l => `<li style="font-size: 0.85rem">${l}</li>`).join('')}</ul>`;
                             resultDiv.style.display = 'block';
                             btn.disabled = false;
                         } else if (currentStatus === 'FAILED') {
                             clearInterval(interval);
                             progress.style.display = 'none';
                             resultDiv.className = 'result-message error';
-                            const errorMsg = statusData.logs && statusData.logs.length > 0 
-                                ? statusData.logs[statusData.logs.length - 1] 
-                                : "Noma'lum xatolik yuz berdi.";
-                            resultDiv.innerText = `Xatolik yuz berdi. Sababi: ${errorMsg}`;
+                            resultDiv.innerHTML = `Xatolik yuz berdi.<br><br><b>Jarayonlar:</b><ul style="text-align:left; margin-top:10px; max-height:200px; overflow-y:auto;">${(statusData.logs || []).map(l => `<li style="font-size: 0.85rem">${l}</li>`).join('')}</ul>`;
                             resultDiv.style.display = 'block';
                             btn.disabled = false;
                         }
