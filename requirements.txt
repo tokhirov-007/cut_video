@@ -7,3 +7,6 @@ requests
 python-multipart
 imageio-ffmpeg
 opencv-python-headless
+pytesseract
+Pillow
+numpy
