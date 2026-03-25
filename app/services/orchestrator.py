@@ -463,7 +463,8 @@ class OrchestratorService:
             self.video_service.extract_audio(final_path, audio_path)
 
             # Create session
-            r_sess = requests.post(f"{settings.AI_CONTROLLER_URL}/create-session", timeout=30)
+            _base_url = settings.AI_CONTROLLER_URL.rstrip("/")
+            r_sess = requests.post(f"{_base_url}/create-session", timeout=30)
             r_sess.raise_for_status()
             session_id = r_sess.json()["session_id"]
 
