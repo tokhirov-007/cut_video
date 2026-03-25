@@ -454,7 +454,8 @@ class OrchestratorService:
         db.commit()
 
     def _upload_to_ai(self, db, task, final_path, final_name, interval, room, date_str):
-        """Extract audio and upload to AI controller + register with backend."""
+        """Extract audio and upload to AI controller using the new streaming API."""
+        import json
         audio_name = final_name.replace(".mp4", ".mp3")
         audio_path = final_path.replace(".mp4", ".mp3")
         try:
@@ -462,92 +463,126 @@ class OrchestratorService:
             db.commit()
             self.video_service.extract_audio(final_path, audio_path)
 
-            # Create session
-            _base_url = settings.AI_CONTROLLER_URL.rstrip("/")
-            r_sess = requests.post(f"{_base_url}/create-session", timeout=30)
-            r_sess.raise_for_status()
-            session_id = r_sess.json()["session_id"]
-
-            # Upload audio
-            with open(audio_path, 'rb') as af:
-                r_aud = requests.post(
-                    f"{settings.AI_CONTROLLER_URL}/api/upload-media/{session_id}",
-                    files={"video": (audio_name, af, "audio/mpeg")},
-                    timeout=300,
-                )
-                r_aud.raise_for_status()
-
-            # Upload notes (plan) if available
+            # Prepare files for the combined /analyze request
             plan_url = interval.get('plan_file')
+            notes_file_obj = None
+            tmp_plan_path = None
+
             if plan_url:
                 try:
-                    # Download the plan file from backend to pass to AI controller
                     clean_url = plan_url if plan_url.startswith('http') else f"{settings.SM_BACKEND_URL}{plan_url}"
                     plan_resp = requests.get(clean_url, timeout=30)
                     if plan_resp.status_code == 200:
                         import tempfile
-                        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_plan:
+                        with tempfile.NamedTemporaryFile(delete=False, suffix=".docx") as tmp_plan:
                             tmp_plan.write(plan_resp.content)
                             tmp_plan_path = tmp_plan.name
-                        
-                        with open(tmp_plan_path, 'rb') as f_plan:
-                            r_notes = requests.post(
-                                f"{settings.AI_CONTROLLER_URL}/upload-notes/{session_id}",
-                                files={"notes_file": (os.path.basename(plan_url), f_plan, "application/pdf")},
-                                data={"teacher": interval.get('teacher', 'Unknown'), "topic": interval.get('subject', 'Unknown')},
-                                timeout=60
-                            )
-                        os.remove(tmp_plan_path)
-                        if r_notes.status_code == 200:
-                            task.logs = task.logs + ["Dars ishlanmasi (reja) AI ga yuborildi."]
+                        notes_file_obj = open(tmp_plan_path, 'rb')
                 except Exception as ex_plan:
-                    logger.warning(f"Failed to upload notes: {ex_plan}")
-                    task.logs = task.logs + [f"Rejani yuborishda xato: {str(ex_plan)[:50]}"]
+                    logger.warning(f"Failed to prepare notes: {ex_plan}")
 
-            # Register with backend
-            # Use CUT_VIDEO_URL to provide a direct link to the actual video file
-            video_filename = os.path.basename(final_path)
-            public_video_url = f"{settings.CUT_VIDEO_URL}/download/{date_str}/{room}/{video_filename}"
+            # If no plan file, we must still provide one for the AI Controller API (as it's required in main.py)
+            # We'll create a dummy one if needed
+            if not notes_file_obj:
+                import tempfile
+                with tempfile.NamedTemporaryFile(delete=False, mode='w', suffix=".docx") as tmp_dummy:
+                    tmp_dummy.write(f"Mavzu: {interval.get('subject', 'Unknown')}\nO'qituvchi: {interval.get('teacher', 'Unknown')}")
+                    tmp_plan_path = tmp_dummy.name
+                notes_file_obj = open(tmp_plan_path, 'rb')
 
-            r_reg = requests.post(
-                f"{settings.SM_BACKEND_URL}/api/analysis/register_session/",
-                json={
-                    "session_id": session_id,
-                    "topic": interval.get('subject', 'Unknown'),
-                    "teacher": interval.get('teacher', 'Unknown'),
-                    "room": room,
-                    "video_file": public_video_url,
-                },
-                timeout=30,
-            )
-            r_reg.raise_for_status()
+            with open(audio_path, 'rb') as af:
+                files = {
+                    "audio": (audio_name, af, "audio/mpeg"),
+                    "notes": (os.path.basename(plan_url) if plan_url else f"{interval.get('subject')}.docx", notes_file_obj, "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+                }
 
-            # Trigger background analysis in AI Controller with OSD metadata
-            try:
-                # OSD start time (interval['start']) is the best indicator for schedule matching
-                r_start = requests.get(
-                    f"{settings.AI_CONTROLLER_URL}/analyze-background/{session_id}",
-                    params={
-                        "date": date_str,
-                        "time": interval.get('start', '09:00'),
-                        "room": room,
-                        "video_url": public_video_url
-                    },
-                    timeout=30
-                )
-                if r_start.status_code == 200:
-                    task.logs = task.logs + [f"AI analizi avtomatik boshlandi. Session: {session_id}"]
-                else:
-                    task.logs = task.logs + [f"AI analizini boshlashda xato: {r_start.status_code}"]
-            except Exception as start_e:
-                task.logs = task.logs + [f"AI analizini boshlashda xato (Tarmoq): {str(start_e)[:50]}"]
+                _base_url = settings.AI_CONTROLLER_URL.rstrip("/")
+                logger.info(f"Triggering analysis on {_base_url}/analyze")
+                
+                # Use stream=True to process NDJSON progress
+                response = requests.post(f"{_base_url}/analyze", files=files, stream=True, timeout=None)
+                response.raise_for_status()
 
+                session_id = None
+                final_result = None
+
+                for line in response.iter_lines():
+                    if line:
+                        event = json.loads(line.decode('utf-8'))
+                        e_type = event.get("type")
+                        e_msg = event.get("message")
+                        
+                        if e_type == "started":
+                            session_id = event.get("session_id")
+                            task.logs = task.logs + [f"AI Sessiya yaratildi: {session_id}"]
+                            db.commit()
+                            
+                            # Register with backend as soon as we have session_id
+                            video_filename = os.path.basename(final_path)
+                            public_video_url = f"{settings.CUT_VIDEO_URL}/download/{date_str}/{room}/{video_filename}"
+                            try:
+                                requests.post(
+                                    f"{settings.SM_BACKEND_URL}/api/analysis/register_session/",
+                                    json={
+                                        "session_id": session_id,
+                                        "topic": interval.get('subject', 'Unknown'),
+                                        "teacher": interval.get('teacher', 'Unknown'),
+                                        "room": room,
+                                        "video_file": public_video_url,
+                                    },
+                                    timeout=30,
+                                )
+                            except Exception as reg_err:
+                                logger.error(f"Failed to register session: {reg_err}")
+
+                        elif e_type == "progress":
+                            # We can log granular progress if needed, but for now just common log
+                            if e_msg and "AI analysis" in e_msg: # Only log major steps
+                                task.logs = task.logs + [f"AI: {e_msg}"]
+                                db.commit()
+                        
+                        elif e_type == "finished":
+                            final_result = event.get("result")
+                            task.logs = task.logs + ["AI tahlili muvaffaqiyatli yakunlandi."]
+                            db.commit()
+                        
+                        elif e_type == "failed":
+                            raise Exception(f"AI Controller failed: {e_msg}")
+
+                if final_result and session_id:
+                    # Save final results to Django Backend
+                    video_filename = os.path.basename(final_path)
+                    public_video_url = f"{settings.CUT_VIDEO_URL}/download/{date_str}/{room}/{video_filename}"
+                    
+                    try:
+                        requests.post(
+                            f"{settings.SM_BACKEND_URL}/api/analysis/save_analysis/",
+                            json={
+                                "ai_session_id": session_id,
+                                "score": final_result.get("score") or final_result.get("coverage_score") or 0,
+                                "grade": final_result.get("grade", "Noma'lum"),
+                                "summary": final_result.get("summary") or final_result.get("executive_summary") or "",
+                                "suggestion": final_result.get("suggestion") or final_result.get("detailed_analysis") or "",
+                                "plan_file": f"{_base_url}/api/download-notes/{session_id}", # AI controller's download link
+                                "video_file": public_video_url,
+                                "result_file": f"{_base_url}/api/download-pdf/{session_id}",
+                                "transcript_file": f"{_base_url}/api/download-transcript/{session_id}" if final_result.get("transcript_available") else None,
+                                "plot_file": f"{_base_url}/api/download-plot/{session_id}" if final_result.get("plot_available") else None,
+                            },
+                            timeout=30
+                        )
+                    except Exception as save_err:
+                        logger.error(f"Failed to save analysis: {save_err}")
+
+            # Cleanup
+            if notes_file_obj:
+                notes_file_obj.close()
+            if tmp_plan_path and os.path.exists(tmp_plan_path):
+                os.remove(tmp_plan_path)
             if os.path.exists(audio_path):
                 os.remove(audio_path)
 
-            db.commit()
-
         except Exception as ai_e:
-            logger.error(f"Failed to upload to AI: {ai_e}")
-            task.logs = task.logs + [f"AI xato: {ai_e}"]
+            logger.error(f"Failed to handle AI analysis: {ai_e}")
+            task.logs = task.logs + [f"AI xato: {str(ai_e)[:100]}"]
             db.commit()
